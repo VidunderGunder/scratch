@@ -38,12 +38,10 @@ export default function Scratch({
       let isPress = false;
       let old: { x: number; y: number } | null = null;
       canvas.addEventListener("mousedown", function (e) {
-        console.log("mousedown");
         isPress = true;
         old = { x: e.offsetX, y: e.offsetY };
       });
       canvas.addEventListener("touchstart", function (e) {
-        console.log("touchstart");
         isPress = true;
         old = {
           x: e.touches[0].clientX - bounds.x,
@@ -51,13 +49,15 @@ export default function Scratch({
         };
       });
       canvas.addEventListener("mousemove", function (e) {
-        console.log("mousemove");
         if (isPress && old !== null) {
           let x = e.offsetX;
           let y = e.offsetY;
           ctx.globalCompositeOperation = "destination-out";
 
           ctx.beginPath();
+
+          // Scratch stroke
+          ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
           ctx.arc(x, y, 1, 0, 2 * Math.PI);
           ctx.fill();
 
@@ -71,7 +71,6 @@ export default function Scratch({
         }
       });
       canvas.addEventListener("touchmove", function (e) {
-        console.log("touchmove");
         if (isPress && old !== null) {
           let x = e.touches[0].clientX - bounds.x;
           let y = e.touches[0].clientY - bounds.y;
@@ -91,11 +90,9 @@ export default function Scratch({
         }
       });
       canvas.addEventListener("mouseup", function (e) {
-        console.log("mouseup");
         isPress = false;
       });
       canvas.addEventListener("touchend", function (e) {
-        console.log("touchend");
         isPress = false;
       });
     }

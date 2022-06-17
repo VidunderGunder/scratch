@@ -1,6 +1,6 @@
 /** @jsxImportSource @emotion/react */
 import { css } from "@emotion/react";
-import { ComponentPropsWithoutRef, useEffect, useRef } from "react";
+import { ComponentPropsWithoutRef, useEffect, useRef, useState } from "react";
 import useMeasure from "react-use-measure";
 
 /**
@@ -15,63 +15,95 @@ export default function Scratch({
   bottomImage: string;
 } & ComponentPropsWithoutRef<"div">) {
   const [ref, bounds] = useMeasure();
-  const [bottomImageRef, bottomImageBounds] = useMeasure();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvas = canvasRef.current;
 
   useEffect(() => {
-    if (canvas) {
-      let url = topImage;
-      const ctx = canvas.getContext("2d");
+    if (canvas === null) return;
+    let url = topImage;
+    const ctx = canvas.getContext("2d");
 
-      if (ctx) {
-        let img = new Image();
-        img.src = url;
-        img.onload = function () {
-          let width = bottomImageBounds.width;
-          let height = bottomImageBounds.height;
+    if (ctx) {
+      let img = new Image();
+      img.src = url;
+      img.onload = function () {
+        let width = bounds.width;
+        let height = bounds.height;
 
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+      };
+
+      let isPress = false;
+      let old: { x: number; y: number } | null = null;
+      canvas.addEventListener("mousedown", function (e) {
+        console.log("mousedown");
+        isPress = true;
+        old = { x: e.offsetX, y: e.offsetY };
+      });
+      canvas.addEventListener("touchstart", function (e) {
+        console.log("touchstart");
+        isPress = true;
+        old = {
+          x: e.touches[0].clientX - bounds.x,
+          y: e.touches[0].clientY - bounds.y,
         };
+      });
+      canvas.addEventListener("mousemove", function (e) {
+        console.log("mousemove");
+        if (isPress && old !== null) {
+          let x = e.offsetX;
+          let y = e.offsetY;
+          ctx.globalCompositeOperation = "destination-out";
 
-        let isPress = false;
-        let old: { x: number; y: number } | null = null;
-        canvas.addEventListener("mousedown", function (e) {
-          isPress = true;
-          old = { x: e.offsetX, y: e.offsetY };
-        });
-        canvas.addEventListener("mousemove", function (e) {
-          if (isPress && old !== null) {
-            let x = e.offsetX;
-            let y = e.offsetY;
-            ctx.globalCompositeOperation = "destination-out";
+          ctx.beginPath();
+          ctx.arc(x, y, 1, 0, 2 * Math.PI);
+          ctx.fill();
 
-            ctx.beginPath();
-            ctx.arc(x, y, 1, 0, 2 * Math.PI);
-            ctx.fill();
+          ctx.lineWidth = 100;
+          ctx.beginPath();
+          ctx.moveTo(old.x, old.y);
+          ctx.lineTo(x, y);
+          ctx.stroke();
 
-            ctx.lineWidth = 100;
-            ctx.beginPath();
-            ctx.moveTo(old.x, old.y);
-            ctx.lineTo(x, y);
-            ctx.stroke();
+          old = { x: x, y: y };
+        }
+      });
+      canvas.addEventListener("touchmove", function (e) {
+        console.log("touchmove");
+        if (isPress && old !== null) {
+          let x = e.touches[0].clientX - bounds.x;
+          let y = e.touches[0].clientY - bounds.y;
+          ctx.globalCompositeOperation = "destination-out";
 
-            old = { x: x, y: y };
-          }
-        });
-        canvas.addEventListener("mouseup", function (e) {
-          isPress = false;
-        });
-      }
+          ctx.beginPath();
+          ctx.arc(x, y, 1, 0, 2 * Math.PI);
+          ctx.fill();
+
+          ctx.lineWidth = 100;
+          ctx.beginPath();
+          ctx.moveTo(old.x, old.y);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+
+          old = { x: x, y: y };
+        }
+      });
+      canvas.addEventListener("mouseup", function (e) {
+        console.log("mouseup");
+        isPress = false;
+      });
+      canvas.addEventListener("touchend", function (e) {
+        console.log("touchend");
+        isPress = false;
+      });
     }
-  }, [canvas, topImage, bottomImageBounds]);
+  }, [canvas, topImage, bounds]);
 
   return (
     <div
       {...props}
-      ref={ref}
       css={css`
         /*
          * Make canvas and img fill the container and put canvas in front of img.
@@ -81,8 +113,8 @@ export default function Scratch({
         align-items: center;
         justify-content: center;
         position: relative;
-        width: ${bottomImageBounds.width}px;
-        height: ${bottomImageBounds.height}px;
+        width: ${bounds.width}px;
+        height: ${bounds.height}px;
         max-width: 500px;
         max-height: 500px;
         overflow: hidden;
@@ -108,7 +140,7 @@ export default function Scratch({
         }
       `}
     >
-      <img src={bottomImage} ref={bottomImageRef} />
+      <img src={bottomImage} ref={ref} />
       <canvas ref={canvasRef} />
     </div>
   );

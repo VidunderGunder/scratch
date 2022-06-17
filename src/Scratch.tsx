@@ -79,16 +79,19 @@ export default function Scratch({
           let y = e.touches[0].clientY - bounds.y;
           ctx.globalCompositeOperation = "destination-out";
 
-          ctx.beginPath();
-          ctx.arc(x, y, 1, 0, 2 * Math.PI);
-          ctx.fill();
-
-          ctx.lineWidth = 100;
-          ctx.beginPath();
-          ctx.moveTo(old.x, old.y);
-          ctx.lineTo(x, y);
-          ctx.stroke();
-
+          for (let i = 1; i <= 4; i++) {
+            ctx.lineWidth = minWidth / i + Math.random() * (maxWidth / i);
+            // ctx.closePath();
+            ctx.moveTo(
+              old.x + randomization * (Math.random() - 0.5),
+              old.y + randomization * (Math.random() - 0.5)
+            );
+            ctx.lineTo(
+              x + randomization * (Math.random() - 0.5),
+              y + randomization * (Math.random() - 0.5)
+            );
+            ctx.stroke();
+          }
           old = { x: x, y: y };
         }
       });
